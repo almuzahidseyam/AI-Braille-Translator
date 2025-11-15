@@ -1,0 +1,25 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints
+
+# Streamlit
+.streamlit/
+
+# Media
+*.mp4
+*.mp3
+*.jpg
+*.jpeg
+*.png
+!data/
