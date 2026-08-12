@@ -137,7 +137,7 @@ with tab1:
                         
                     audio_temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                     
-                    time.sleep(0.5) # Simulated engine warmup
+                    time.sleep(0.3) # Optimized engine warmup
                     
                     # Execute Vision Engine
                     processed_img, translated_text, dot_count = process_braille_image(temp_img_path)
