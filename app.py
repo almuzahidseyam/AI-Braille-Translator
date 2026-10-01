@@ -55,6 +55,14 @@ def process_braille_image(image_path, sensitivity):
     if img is None:
         raise ValueError("Computer Vision Engine failed to read the image structure.")
         
+    # --- BUG FIX: Auto-Scale High-Res Camera Images ---
+    # Normalizes dot sizes so the sensitivity filter works perfectly on any camera resolution.
+    max_dim = 1024
+    h, w = img.shape[:2]
+    if max(h, w) > max_dim:
+        scale = max_dim / float(max(h, w))
+        img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
     # CLAHE for dynamic lighting correction
@@ -112,7 +120,14 @@ with tab1:
     
     with col1:
         st.subheader("1. Document Ingestion")
-        uploaded_file = st.file_uploader("Upload Braille Paper (JPG/PNG)", type=["jpg", "jpeg", "png"])
+        
+        # --- PREMIUM FEATURE: Live Camera Scan ---
+        upload_method = st.radio("Select Ingestion Method:", ["📂 File Upload", "📸 Live Camera Scan"], horizontal=True)
+        
+        if upload_method == "📂 File Upload":
+            uploaded_file = st.file_uploader("Upload Braille Paper (JPG/PNG)", type=["jpg", "jpeg", "png"])
+        else:
+            uploaded_file = st.camera_input("Scan Braille Document in Real-Time")
         
         if uploaded_file:
             image = Image.open(uploaded_file)
