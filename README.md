@@ -15,11 +15,13 @@
 ## 📌 The Impact
 Reading physical Braille requires tactile knowledge. Sighted educators, parents of visually impaired children, or digital archivers often struggle to read physical Braille documents. This tool bridges the gap by instantly translating physical Braille into text and audio.
 
-## ✨ Premium Features
-- **CLAHE Vision Engine:** Handles badly lit, shadowed, or blurry images using Contrast Limited Adaptive Histogram Equalization.
+## ✨ Premium Enterprise Features
+- **Live Camera Integration:** Instantly scan physical Braille documents using your laptop or mobile webcam (`st.camera_input`).
+- **Multilingual NLP Translation:** Translates decoded Braille into English, Bengali (বাংলা), Spanish, French, and Hindi using Deep-Translator.
+- **Multilingual Text-to-Speech (TTS):** Integrated `gTTS` engine reads the translated text aloud in your chosen language—a crucial feature for true accessibility.
+- **Data Analytics Dashboard:** Built-in Plotly graphs to track scanning history, dot counts, and language metrics across sessions.
+- **CLAHE Vision Engine:** Handles badly lit, shadowed, or blurry images using Contrast Limited Adaptive Histogram Equalization with Auto-Scaling for high-res mobile photos.
 - **Smart Contour Mapping:** High-precision bounding boxes generated dynamically around detected Braille dots.
-- **Text-to-Speech (TTS):** Integrated `gTTS` engine reads the translated text aloud—a crucial feature for true accessibility.
-- **Enterprise Dashboard:** A beautiful, split-screen dark-themed UI built with Streamlit.
 
 ## 🧠 System Architecture
 
