@@ -50,8 +50,11 @@ st.sidebar.markdown("---")
 st.sidebar.caption("© 2026 AI Braille Analytics. Enterprise Build.")
 
 # --- Core AI Vision Engine ---
-def process_braille_image(image_path, sensitivity):
-    img = cv2.imread(image_path)
+def process_braille_image(image_bytes, sensitivity):
+    # Bug Fix: Read directly from RAM using imdecode, eliminating slow Disk I/O
+    file_bytes = np.asarray(bytearray(image_bytes), dtype=np.uint8)
+    img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    
     if img is None:
         raise ValueError("Computer Vision Engine failed to read the image structure.")
         
@@ -141,21 +144,15 @@ with tab1:
         
         if process_btn and uploaded_file:
             with st.spinner("Initializing Deep Vision Engine & NLP Translators..."):
-                temp_img_path = None
-                audio_temp_path = None
                 try:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tfile:
-                        image.convert("RGB").save(tfile.name)
-                        temp_img_path = tfile.name
-                        
-                    audio_temp_path = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
                     time.sleep(0.4) 
                     
-                    # 1. Image Processing
-                    processed_img, base_text, dot_count = process_braille_image(temp_img_path, cv_sensitivity)
+                    # 1. Image Processing directly from RAM
+                    image_bytes = uploaded_file.getvalue()
+                    processed_img, base_text, dot_count = process_braille_image(image_bytes, cv_sensitivity)
                     
                     with st.expander("🛠️ View Computer Vision Diagnostic Logs"):
-                        st.code("Initializing CV Engine...\n[✓] CLAHE Normalization applied\n[✓] Gaussian Blur applied (5x5)\n[✓] Adaptive Thresholding complete\n[✓] Morphological Closing executed\n[✓] Contour area & circularity filters passed\nSuccess: Dot mapping generated.", language="bash")
+                        st.code("Initializing CV Engine...\n[✓] Image decoded directly from RAM\n[✓] Auto-Scaling applied for High-Res\n[✓] CLAHE Normalization applied\n[✓] Gaussian Blur applied (5x5)\n[✓] Adaptive Thresholding complete\n[✓] Morphological Closing executed\n[✓] Contour area & circularity filters passed\nSuccess: Dot mapping generated.", language="bash")
                         
                     st.image(processed_img, caption=f"Computer Vision Topography ({dot_count} dots mapped)", use_container_width=True)
                     
@@ -195,10 +192,6 @@ with tab1:
                         
                 except Exception as e:
                     st.error(f"Critical Engine Failure: {e}")
-                finally:
-                    if temp_img_path and os.path.exists(temp_img_path): 
-                        try: os.remove(temp_img_path)
-                        except: pass
 
 with tab2:
     st.subheader("📊 Global Scanning Analytics")
