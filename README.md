@@ -1,73 +1,86 @@
-# 👁️‍🗨️ AI Braille Translator: Empowering Accessibility
+# Braille reader
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
-![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-green)
-![Streamlit](https://img.shields.io/badge/Streamlit-Web%20App-red)
-![Accessibility](https://img.shields.io/badge/Accessibility-Tech-purple)
-![License](https://img.shields.io/badge/License-MIT-green)
+A deterministic research prototype that decodes a limited uncontracted English
+six-dot alphabet from Unicode cells or a carefully calibrated printed grid.
+The repository keeps its original name, `AI-Braille-Translator`, but the current
+reader does not use an AI model.
 
-> An enterprise-grade Optical Braille Recognition (OBR) system that uses advanced computer vision to translate tactile Braille paper images into readable text and audible speech (TTS).
+The previous implementation counted contours and returned unrelated preset
+sentences. That behavior has been removed. Results now depend on the positions
+of the dots in each cell. An uncertain grid or unsupported pattern produces no
+exportable text, rather than a plausible-looking invented translation.
 
-<div align="center">
-  <img src="https://via.placeholder.com/800x400?text=[Insert+Demo+GIF+Here]" alt="Demo GIF">
-</div>
+## Supported input
 
-## 📌 The Impact
-Reading physical Braille requires tactile knowledge. Sighted educators, parents of visually impaired children, or digital archivers often struggle to read physical Braille documents. This tool bridges the gap by instantly translating physical Braille into text and audio.
+- Lowercase a–z, spaces and newlines.
+- A single capital indicator before one letter.
+- Integer digits after a numeric indicator; a letter indicator after digits.
+- For images: dark printed dots on white, with straight, equal-sized cells in a
+  rectangular grid. No automatic page segmentation or perspective correction.
 
-## ✨ Premium Enterprise Features
-- **Live Camera Integration:** Instantly scan physical Braille documents using your laptop or mobile webcam (`st.camera_input`).
-- **Multilingual NLP Translation:** Translates decoded Braille into English, Bengali (বাংলা), Spanish, French, and Hindi using Deep-Translator.
-- **Multilingual Text-to-Speech (TTS):** Integrated `gTTS` engine reads the translated text aloud in your chosen language—a crucial feature for true accessibility.
-- **Data Analytics Dashboard:** Built-in Plotly graphs to track scanning history, dot counts, and language metrics across sessions.
-- **CLAHE Vision Engine:** Handles badly lit, shadowed, or blurry images using Contrast Limited Adaptive Histogram Equalization with Auto-Scaling for high-res mobile photos.
-- **Smart Contour Mapping:** High-precision bounding boxes generated dynamically around detected Braille dots.
+This is **not** a complete UEB implementation. Punctuation, eight-dot codes,
+capital-word/passage indicators, other languages and arbitrary embossed-paper
+photos are unsupported. Contracted Braille can reuse alphabetic cells and cannot
+be detected automatically; only supply uncontracted English input. It is not a
+replacement for an established accessible transcription service.
 
-## 🧠 System Architecture
+## Run
 
-```mermaid
-flowchart TD
-    A[Upload Braille Image] --> B[OpenCV Image Normalization]
-    B --> C[CLAHE & Gaussian Blur]
-    C --> D[Adaptive Thresholding & Contours]
-    D --> E[Dot Grid Mapping]
-    E --> F[Translate to Text]
-    F --> G[Display Output]
-    F --> H[Google TTS Engine]
-    H --> I[Play Audio]
+Use Python 3.12 or 3.13:
+
+```sh
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt -c constraints.txt
+python -m streamlit run app.py --server.address=127.0.0.1
 ```
 
-## 🚀 Installation & Run
+No API keys, model downloads, translator service or speech service are required.
+Images/text remain on the machine running Streamlit. There are no remote media
+assets, analytics calls from application code, or stored scan-history database.
+For local privacy, keep the server bound to loopback; on a hosted deployment,
+uploads necessarily go to that host. Streamlit's own telemetry can be disabled
+with `--browser.gatherUsageStats=false`.
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/almuzahidseyam/AI-Braille-Translator.git
-   cd AI-Braille-Translator
-   ```
+## Read a printed grid
 
-2. **Create virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   ```
+1. Download the app's generated **hello** example and try 1 row, 5 cells per row.
+2. Crop your input to exact equal cells, including blank cells for word spaces.
+3. Inside each cell, put dot columns at ⅓ and ⅔ of cell width, and dot rows at ¼,
+   ½ and ¾ of cell height. This alignment is a requirement, not something the
+   reader discovers automatically.
+4. Set rows and cells per row, then choose **Read calibrated grid**.
+5. Check the source against the preview's six sampled regions and the candidate
+   text before exporting it. Even an accepted grid can be miscalibrated; exports
+   carry a candidate-transcription label.
 
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+Each sampled region is classified as dark, light or ambiguous. Significant ink
+outside the regions is rejected. The threshold can be adjusted for a clean scan;
+it cannot make an arbitrary photo supported. Input is capped at 10 MiB and 12
+million pixels, with at most 1,000 cells. Invalid images, empty pages, incomplete
+indicators and unsupported characters produce explicit errors.
 
-4. **Launch the App:**
-   ```bash
-   streamlit run app.py
-   ```
+The **Unicode Braille** tab reads actual cell patterns. For example,
+`⠓⠑⠇⠇⠕ ⠺⠕⠗⠇⠙` decodes to `hello world`. It does not translate between languages.
 
-## 🛠️ Tech Stack
-- **Vision:** OpenCV (`cv2`), Numpy
-- **Audio:** `gTTS` (Google Text-to-Speech)
-- **UI:** Streamlit, Custom CSS
+## Verify
 
-## 🤝 Contributing
-Feel free to open issues and pull requests to improve the dot-mapping structural logic!
+```sh
+python -m pip install -r requirements-dev.txt -c constraints.txt
+python -m pytest -q
+python -m pip_audit -r constraints.txt --no-deps --disable-pip
+```
 
-## 📝 License
-MIT License.
+Tests cover all 26 letters, digits, capitals, incomplete/unsupported input,
+transparent/corrupt/oversized images, grid alignment and actual image decoding.
+A regression fixture gives two cells the same number of dots in different
+positions and verifies different letters, preventing the old count-based fake
+translation. Streamlit tests verify visible success and error states. CI repeats
+tests and audits before changes are considered ready.
+
+Implementation: `braille.py` contains image validation and deterministic decoding;
+`app.py` contains the interface. Dependencies are constrained to tested versions.
+
+Braille context: [BANA guidance on uncontracted Braille and indicators](https://www.brailleauthority.org/signage/index.html).
+The application implements only the explicitly listed subset, not that complete standard.
